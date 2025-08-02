@@ -1,7 +1,7 @@
-import { getHumeAccessToken } from "@/utils/getHumeAccessToken";
+import { getHumeAccessToken } from "@/features/web-voice-assistant/utils/getHumeAccessToken";
 import dynamic from "next/dynamic";
 
-const Chat = dynamic(() => import("@/components/Chat"), {
+const Chat = dynamic(() => import("@/features/web-voice-assistant/components/Chat"), {
   ssr: false,
 });
 

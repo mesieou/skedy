@@ -1,9 +1,9 @@
 "use client";
 import { useVoice } from "@humeai/voice-react";
-import { Button } from "./ui/button";
+import { Button } from "../../../components/ui/button";
 import { Mic, MicOff, Phone } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { Toggle } from "./ui/toggle";
+import { Toggle } from "../../../components/ui/toggle";
 import MicFFT from "./MicFFT";
 import { cn } from "@/utils";
 

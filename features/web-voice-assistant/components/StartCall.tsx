@@ -1,6 +1,6 @@
 import { useVoice } from "@humeai/voice-react";
 import { AnimatePresence, motion } from "motion/react";
-import { Button } from "./ui/button";
+import { Button } from "../../../components/ui/button";
 import { Phone } from "lucide-react";
 import { toast } from "sonner";
 
