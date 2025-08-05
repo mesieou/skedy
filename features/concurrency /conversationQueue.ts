@@ -1,5 +1,5 @@
 import { ChatSession } from "../conversation-service/types";
-import { ConversationPool } from "./conversation-pool";
+import { ConversationPool } from "./conversationPool";
 
 class ConversationQueue {
   private queue: any[] = [];

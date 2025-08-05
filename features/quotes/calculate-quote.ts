@@ -11,8 +11,3 @@ export async function getBusinessById(id: string){
     }
     return cachedBusiness[id];
 }
-
-//create context
-//business info
-const business = await getBusinessById("1");
-console.log(business);
