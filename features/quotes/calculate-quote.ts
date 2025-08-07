@@ -1,6 +1,8 @@
 import { PrismaClient } from "../../app/generated/prisma";
+import { botPrisma } from "../../lib/prisma";
 
-const prisma = new PrismaClient();
+const prisma = botPrisma;
+
 let cachedBusiness: Record<string, Awaited<ReturnType<typeof prisma.businesses.findFirst>>> = {};
 
 export async function getBusinessById(id: string){

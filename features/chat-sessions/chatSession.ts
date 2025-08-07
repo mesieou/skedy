@@ -1,11 +1,9 @@
-import { PrismaClient } from "../../app/generated/prisma";
-
-const prisma = new PrismaClient();
+import { botPrisma } from "../../lib/prisma";
 
 export class ChatSession {
-    constructor(private prisma: PrismaClient) {}
+    constructor(private prisma: typeof botPrisma) {}
 
     async create() {
-        return await this.prisma.chatSessions.create();
+        // return await this.prisma.chatSessions.create();
     }
 }

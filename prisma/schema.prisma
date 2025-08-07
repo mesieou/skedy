@@ -328,36 +328,24 @@ model auth_users {
   @@schema("auth")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model availabilitySlots {
-  id         String     @id(map: "availabilitySlotss_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt  DateTime   @default(now()) @db.Timestamptz(6)
-  date       DateTime   @db.Timestamptz(6)
-  slots      Json
-  businessId String     @db.Uuid
-  businesses businesses @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@unique([businessId, date], map: "availabilitySlots_businessId_date_unique")
-  @@index([businessId, date])
-  @@schema("public")
-}
-
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model bookings {
-  id                               String       @id(map: "bookings_pkey1") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                        DateTime     @default(now()) @db.Timestamptz(6)
-  status                           String?
-  quoteId                          String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId                           String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId                       String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  providerId                       String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  dateTime                         DateTime     @db.Timestamptz(6)
-  businesses                       businesses   @relation(fields: [businessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_bookings_providerIdTousers public_users @relation("bookings_providerIdTousers", fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_providerId_fkey1")
-  quotes                           quotes       @relation(fields: [quoteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_bookings_userIdTousers     public_users @relation("bookings_userIdTousers", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "bookings_userId_fkey1")
+  id                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at            DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?          @default(now()) @db.Timestamptz(6)
+  user_id               String             @db.Uuid
+  business_id           String             @db.Uuid
+  status                String             @default("not_accepted")
+  total_estimate_amount Decimal            @default(0) @db.Decimal(10, 2)
+  total_estimate_time   Decimal            @default(0) @db.Decimal(10, 2)
+  booking_services      booking_services[]
+  businesses            businesses         @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
+  users                 public_users       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_id")
+  notifications         notifications[]
 
+  @@index([business_id], map: "idx_business_id_bookings")
+  @@index([user_id], map: "idx_user_id_bookings")
   @@schema("public")
 }
 
@@ -365,198 +353,39 @@ model bookings {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model businesses {
-  id                     String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt              DateTime            @default(now()) @db.Timestamptz(6)
-  name                   String
-  email                  String              @unique
-  phone                  String?             @unique
-  timeZone               String
-  updatedAt              DateTime?           @db.Timestamptz(6)
-  interfaceType          String
-  websiteUrl             String?
-  whatsappNumber         String?
-  businessAddress        String?
-  depositPercentage      Float?
-  stripeConnectAccountId String?
-  stripeAccountStatus    String?
-  whatsappPhoneNumberId  String?
-  preferredPaymentMethod String?
-  businessCategory       String?
-  numberOfProviders      Int?                @default(1)
-  bookingFee             Float?              @default(4.00)
-  depositType            String?             @default("percentage")
-  depositFixedAmount     Decimal?            @db.Decimal(10, 2)
-  availabilitySlots      availabilitySlots[]
-  bookings               bookings[]
-  calendarSettings       calendarSettings[]
-  chatSessions           chatSessions[]
-  crawlSessions          crawlSessions[]
-  documents              documents[]
-  errorLogs              errorLogs[]
-  notifications          notifications[]
-  quotes                 quotes[]
-  services               services[]
-  userContexts           userContexts[]
-  users                  public_users[]
-
-  @@schema("public")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model calendarSettings {
-  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt    DateTime     @default(now()) @db.Timestamptz(6)
-  updatedAt    DateTime     @default(now()) @db.Timestamptz(6)
-  userId       String       @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId   String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  calendarId   String?
-  calendarType String?
-  settings     Json
-  workingHours Json
-  businesses   businesses   @relation(fields: [businessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users        public_users @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("public")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model chatSessions {
-  id                                           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                                    DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt                                    DateTime        @db.Timestamptz(6)
-  endedAt                                      DateTime?       @db.Timestamptz(6)
-  sessionIntent                                String?
-  allMessages                                  Json?
-  summarySession                               String?
-  feedbackDataAveraged                         Json?
-  overallChatScore                             Int?            @db.SmallInt
-  channel                                      String
-  userId                                       String?         @db.Uuid
-  businessId                                   String          @db.Uuid
-  channelUserId                                String?
-  status                                       String?
-  controlledByUserId                           String?         @db.Uuid
-  controlTakenAt                               DateTime?       @db.Timestamptz(6)
-  businesses                                   businesses      @relation(fields: [businessId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  users_chatSessions_controlledByUserIdTousers public_users?   @relation("chatSessions_controlledByUserIdTousers", fields: [controlledByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_chatSessions_userIdTousers             public_users?   @relation("chatSessions_userIdTousers", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  errorLogs                                    errorLogs[]
-  notifications                                notifications[]
-
-  @@index([channel, channelUserId])
-  @@schema("public")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model crawlSessions {
-  id                 String      @id(map: "crawl_sessions_pkey") @db.Uuid
-  businessId         String?     @db.Uuid
-  startTime          BigInt?
-  endTime            BigInt?
-  totalPages         Int?
-  successfulPages    Int?
-  failedPages        Int?
-  categories         Json?
-  errors             Json?
-  missingInformation String?
-  businesses         businesses? @relation(fields: [businessId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "crawl_sessions_businessId_fkey")
-  documents          documents[]
-
-  @@schema("public")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model documents {
-  id                     String                 @id(map: "documentss_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId             String                 @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  category               String
-  type                   String
-  title                  String
-  content                String
-  source                 String
-  createdAt              DateTime               @default(now()) @db.Timestamptz(6)
-  contentHash            String?
-  sessionId              String?                @db.Uuid
-  confidence             Float
-  preChunkSourceIndex    Int?
-  embedding              Unsupported("vector")?
-  updatedAt              DateTime?              @db.Timestamptz(6)
-  embeddingInputText     String?
-  embeddingAttemptResult Json?
-  serviceId              String?                @db.Uuid
-  crawlSessions          crawlSessions?         @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  businesses             businesses             @relation(fields: [businessId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "documentss_businessId_fkey")
-  embeddings             embeddings[]
-
-  @@schema("public")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model embeddings {
-  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  documentId String?                @db.Uuid
-  content    String?
-  embedding  Unsupported("vector")?
-  category   String?
-  chunkIndex Int?
-  metadata   Json?
-  createdAt  DateTime?              @default(now()) @db.Timestamptz(6)
-  documents  documents?             @relation(fields: [documentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("public")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model errorLogs {
-  id                                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  errorLevel                        String        @db.VarChar(10)
-  errorType                         String        @db.VarChar(100)
-  errorMessage                      String
-  errorStack                        String?
-  url                               String?
-  method                            String?       @db.VarChar(10)
-  userId                            String?       @db.Uuid
-  businessId                        String?       @db.Uuid
-  chatSessionId                     String?       @db.Uuid
-  userAgent                         String?
-  ipAddress                         String?       @db.Inet
-  requestBody                       Json?
-  queryParams                       Json?
-  environment                       String?       @default("production") @db.VarChar(20)
-  version                           String?       @db.VarChar(50)
-  additionalContext                 Json?
-  resolved                          Boolean?      @default(false)
-  resolvedAt                        DateTime?     @db.Timestamptz(6)
-  resolvedBy                        String?       @db.Uuid
-  resolutionNotes                   String?
-  createdAt                         DateTime?     @default(now()) @db.Timestamptz(6)
-  updatedAt                         DateTime?     @default(now()) @db.Timestamptz(6)
-  businesses                        businesses?   @relation(fields: [businessId], references: [id], onUpdate: NoAction, map: "errorLogs_businessid_fkey")
-  chatSessions                      chatSessions? @relation(fields: [chatSessionId], references: [id], onUpdate: NoAction, map: "errorLogs_chatsessionid_fkey")
-  users_errorLogs_resolvedByTousers public_users? @relation("errorLogs_resolvedByTousers", fields: [resolvedBy], references: [id], onUpdate: NoAction, map: "errorLogs_resolvedby_fkey")
-  users_errorLogs_userIdTousers     public_users? @relation("errorLogs_userIdTousers", fields: [userId], references: [id], onUpdate: NoAction, map: "errorLogs_userid_fkey")
-
-  @@index([businessId], map: "idx_errorlogs_businessid")
-  @@index([createdAt(sort: Desc)], map: "idx_errorlogs_createdat")
-  @@index([errorLevel], map: "idx_errorlogs_errorlevel")
-  @@index([errorType], map: "idx_errorlogs_errortype")
-  @@index([resolved], map: "idx_errorlogs_resolved")
-  @@index([userId], map: "idx_errorlogs_userid")
-  @@schema("public")
-}
-
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model events {
-  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  summary     String?
-  description String?
-  location    String?
-  startTime   DateTime     @db.Timestamptz(6)
-  endTime     DateTime     @db.Timestamptz(6)
-  status      String
-  userId      String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  users       public_users @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                        String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at                DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at                DateTime?            @default(now()) @db.Timestamptz(6)
+  name                      String
+  email                     String               @unique
+  phone_number              String               @unique
+  address                   String
+  time_zone                 String
+  language                  String
+  business_category         String
+  charges_gst               Boolean              @default(false)
+  gst_rate                  Decimal              @default(10.00) @db.Decimal(5, 2)
+  currency_code             String               @default("AUD")
+  number_of_providers       Int                  @default(1)
+  subscription_type         String               @default("free")
+  payment_methods           String[]
+  preferred_payment_method  String
+  deposit_type              String               @default("percentage")
+  deposit_percentage        Float?
+  deposit_fixed_amount      Decimal?             @db.Decimal
+  website_url               String?
+  whatsapp_number           String?
+  whatsapp_phone_number_id  String?
+  stripe_connect_account_id String?
+  stripe_account_status     String?
+  availability_slots        availability_slots[]
+  bookings                  bookings[]
+  chat_sessions             chat_sessions[]
+  crawl_sessions            crawl_sessions[]
+  frequent_questions        frequent_questions[]
+  notifications             notifications[]
+  services                  services[]
+  users                     public_users[]
 
   @@schema("public")
 }
@@ -565,133 +394,225 @@ model events {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model notifications {
-  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt           DateTime      @default(now()) @db.Timestamptz(6)
-  businessId          String        @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  chatSessionId       String        @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  message             String
-  status              String        @default("unread")
-  userId              String?       @db.Uuid
-  deliveryStatus      String?       @default("pending")
-  deliveryAttempts    Int?          @default(0)
-  lastDeliveryAttempt DateTime?     @db.Timestamptz(6)
-  deliveryError       String?
-  targetPhoneNumber   String?
-  whatsappMessageId   String?
-  notificationType    String?       @default("escalation")
-  priorityLevel       String?       @default("medium")
-  languageCode        String?       @default("en")
-  proxySessionData    Json?
-  businesses          businesses    @relation(fields: [businessId], references: [id], onDelete: NoAction)
-  chatSessions        chatSessions  @relation(fields: [chatSessionId], references: [id], onDelete: NoAction)
-  users               public_users? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at      DateTime?      @default(now()) @db.Timestamptz(6)
+  sent_at         DateTime?      @db.Timestamptz(6)
+  user_id         String         @db.Uuid
+  business_id     String         @db.Uuid
+  content         String
+  delivery_method String
+  delivery_status String
+  status          String         @default("active")
+  booking_id      String?        @db.Uuid
+  chat_session_id String?        @db.Uuid
+  bookings        bookings?      @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_booking_id")
+  businesses      businesses     @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
+  chat_sessions   chat_sessions? @relation(fields: [chat_session_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_chat_session_id")
+  users           public_users   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_id")
 
-  @@index([deliveryStatus], map: "idx_notifications_delivery_status")
-  @@index([notificationType], map: "idx_notifications_notification_type")
-  @@schema("public")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model quotes {
-  id                         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                  DateTime     @default(now()) @db.Timestamptz(6)
-  userId                     String       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  pickUp                     String?
-  dropOff                    String?
-  businessId                 String       @db.Uuid
-  travelCostEstimate         Int?         @db.SmallInt
-  status                     String?
-  totalJobCostEstimation     Int          @db.SmallInt
-  updatedAt                  DateTime?    @db.Timestamptz(6)
-  travelTimeEstimate         Int?         @db.SmallInt
-  totalJobDurationEstimation Int          @db.SmallInt
-  serviceCost                Int?         @db.SmallInt
-  depositAmount              Int?         @db.SmallInt
-  remainingBalance           Float?
-  proposedDateTime           DateTime?    @db.Timestamptz(6)
-  serviceIds                 String[]     @db.Uuid
-  bookings                   bookings[]
-  businesses                 businesses   @relation(fields: [businessId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "quotes_businessId_fkey1")
-  users                      public_users @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "quotes_userId_fkey1")
-
-  @@index([serviceIds], map: "idx_quotes_service_ids", type: Gin)
+  @@index([business_id], map: "idx_business_id_notifications")
+  @@index([user_id], map: "idx_user_id_notifications")
   @@schema("public")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model services {
-  id               String     @id @db.Uuid
-  businessId       String     @db.Uuid
-  name             String
-  pricingType      String
-  fixedPrice       Int?
-  baseCharge       Int?
-  includedMinutes  Int?
-  ratePerMinute    Float?
-  description      String?
-  durationEstimate Int?
-  createdAt        DateTime?  @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime?  @default(now()) @db.Timestamptz(6)
-  mobile           Boolean?
-  businesses       businesses @relation(fields: [businessId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at           DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?          @default(now()) @db.Timestamptz(6)
+  business_id          String             @db.Uuid
+  name                 String
+  description          String
+  location_type        String
+  has_price_components Boolean            @default(false)
+  minimum_charge       Int
+  addresses            addresses[]
+  booking_services     booking_services[]
+  price_components     price_components[]
+  businesses           businesses         @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
 
-  @@schema("public")
-}
-
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model userContexts {
-  id                        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  createdAt                 DateTime    @default(now()) @db.Timestamptz(6)
-  updatedAt                 DateTime    @default(now()) @db.Timestamptz(6)
-  channelUserId             String
-  businessId                String?     @db.Uuid
-  currentGoal               Json?
-  previousGoal              Json?
-  participantPreferences    Json?       @default("{\"language\": \"en\", \"timezone\": \"Australia/Melbourne\", \"notificationSettings\": {\"email\": true}}")
-  frequentlyDiscussedTopics String?     @default("{}")
-  sessionData               Json?
-  businesses                businesses? @relation(fields: [businessId], references: [id], onUpdate: NoAction)
-
+  @@index([business_id], map: "idx_business_id_services")
   @@schema("public")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model public_users {
-  id                                                  String            @id @unique @db.Uuid
-  createdAt                                           DateTime          @default(now()) @db.Timestamptz(6)
-  firstName                                           String?
-  lastName                                            String?
-  role                                                String
-  businessId                                          String?           @db.Uuid
-  updatedAt                                           DateTime?         @db.Timestamptz(6)
-  whatsAppNumberNormalized                            String?
-  phoneNormalized                                     String?
-  email                                               String?
-  bookings_bookings_providerIdTousers                 bookings[]        @relation("bookings_providerIdTousers")
-  bookings_bookings_userIdTousers                     bookings[]        @relation("bookings_userIdTousers")
-  calendarSettings                                    calendarSettings?
-  chatSessions_chatSessions_controlledByUserIdTousers chatSessions[]    @relation("chatSessions_controlledByUserIdTousers")
-  chatSessions_chatSessions_userIdTousers             chatSessions[]    @relation("chatSessions_userIdTousers")
-  errorLogs_errorLogs_resolvedByTousers               errorLogs[]       @relation("errorLogs_resolvedByTousers")
-  errorLogs_errorLogs_userIdTousers                   errorLogs[]       @relation("errorLogs_userIdTousers")
-  events                                              events[]
-  notifications                                       notifications[]
-  quotes                                              quotes[]
-  businesses                                          businesses?       @relation(fields: [businessId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users                                               auth_users        @relation(fields: [id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime?           @default(now()) @db.Timestamptz(6)
+  role              String
+  first_name        String
+  business_id       String              @db.Uuid
+  last_name         String?
+  phone_number      String?
+  email             String?
+  bookings          bookings[]
+  calendar_settings calendar_settings[]
+  chat_sessions     chat_sessions[]
+  notifications     notifications[]
+  users             auth_users          @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_auth_users_id")
+  businesses        businesses          @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
 
   @@map("users")
   @@schema("public")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model waitlist {
-  id    BigInt @id(map: "instruments_pkey") @default(autoincrement())
-  email String
+model addresses {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @default(now()) @db.Timestamptz(6)
+  service_id     String    @db.Uuid
+  type           String
+  address_line_1 String
+  address_line_2 String?
+  city           String
+  postcode       String
+  state          String?
+  country        String
+  services       services  @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_service_id")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model availability_slots {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  date        DateTime   @db.Timestamptz(6)
+  slots       Json
+  business_id String     @db.Uuid
+  businesses  businesses @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model booking_services {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+  booking_id String    @db.Uuid
+  service_id String    @db.Uuid
+  bookings   bookings  @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_booking_id")
+  services   services  @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_service_id")
+
+  @@unique([booking_id, service_id], map: "unique_booking_service")
+  @@index([booking_id], map: "idx_booking_id_booking_services")
+  @@index([service_id], map: "idx_service_id_booking_services")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model calendar_settings {
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?    @default(now()) @db.Timestamptz(6)
+  user_id       String       @db.Uuid
+  settings      Json
+  working_hours Json
+  calendar_id   String?
+  calendar_type String?
+  users         public_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_id")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model chat_sessions {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  channel       String
+  user_id       String          @db.Uuid
+  business_id   String          @db.Uuid
+  status        String          @default("active")
+  ended_at      DateTime?       @db.Timestamptz(6)
+  all_messages  Json?
+  businesses    businesses      @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
+  users         public_users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user_id")
+  notifications notifications[]
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model crawl_sessions {
+  id                  String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at          DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?  @default(now()) @db.Timestamptz(6)
+  ended_at            DateTime?  @db.Timestamptz(6)
+  total_pages         Int
+  successful_pages    Int
+  failed_pages        Int
+  business_id         String     @db.Uuid
+  categories          Json?
+  missing_information String?
+  businesses          businesses @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
+
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model frequent_questions {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  business_id String     @db.Uuid
+  type        String
+  source      String
+  title       String
+  content     String
+  businesses  businesses @relation(fields: [business_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_business_id")
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model price_component_tiers {
+  id                     String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at             DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime?        @default(now()) @db.Timestamptz(6)
+  price_component_id     String           @db.Uuid
+  min_quantity           Int              @default(1)
+  max_quantity           Int              @default(1)
+  price                  Decimal          @db.Decimal(10, 2)
+  duration_estimate_mins Int?
+  price_components       price_components @relation(fields: [price_component_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_price_component_id")
+
+  @@schema("public")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model price_components {
+  id                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime?               @default(now()) @db.Timestamptz(6)
+  service_id            String                  @db.Uuid
+  name                  String
+  pricing_method        String
+  has_tiers             Boolean                 @default(false)
+  tier_unit_label       String?
+  price_component_tiers price_component_tiers[]
+  services              services                @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_service_id")
+
+  @@index([service_id], map: "idx_service_id_price_components")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model wait_list_contacts {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  name         String
+  email        String    @unique
+  phone_number String    @unique
+  address      String?
 
   @@schema("public")
 }
