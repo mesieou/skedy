@@ -6,6 +6,7 @@ import { Nav } from "@/components/Nav";
 import { cn } from "@/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { after } from "next/server";
 
 export const metadata: Metadata = {
   title: "Hume AI - EVI - Next.js Starter",
@@ -17,6 +18,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Run non-blocking background work after streaming finishes
+  after(() => {
+    // Example: place analytics/logging/flush jobs here
+    // console.log("after(): background task executed");
+  });
   return (
     <html lang="en">
       <body
