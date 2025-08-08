@@ -6,4 +6,9 @@ export default {
     },
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
     extensionsToTreatAsEsm: ['.ts', '.tsx'],
+    moduleNameMapper: {
+        '^@/(.*)$': '<rootDir>/$1',
+        '^@components/(.*)$': '<rootDir>/components/$1',
+        '^@features/(.*)$': '<rootDir>/features/$1',
+      },
   };
